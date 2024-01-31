@@ -10,18 +10,6 @@ import usb_hid
 trellis = adafruit_trellism4.TrellisM4Express()
 
 gp = Gamepad(usb_hid.devices)
-gp.press_buttons(2)
-
-"""
-while True:
-    trellis.pixels[0, 0] = (0, 0, 0)
-    gp.press_buttons(2)
-    time.sleep(0.5)
-    trellis.pixels[0, 0] = (0, 0, 0)
-    gp.release_buttons(2)
-    time.sleep(0.5)
-"""
-
 
 while True:
     pressed = trellis.pressed_keys
@@ -30,14 +18,17 @@ while True:
         for x, y in pressed:
             button = (x + y * 8) + 1
             pressed_buttons.append(button)
-            trellis.pixels[x, y] = (255, 0, 0)  # Set pressed buttons to red
         print("Pressed buttons:", pressed_buttons)
         gp.press_buttons(*pressed_buttons)
         for i in range(1, 17):
             if i not in pressed_buttons:
                 gp.release_buttons(i)
-                trellis.pixels[(i - 1) % 8, (i - 1) // 8] = (0, 0, 0)  # Set released buttons to black
     else:
         gp.release_all_buttons()
-        trellis.pixels.fill((0, 0, 0))  # Set all buttons to black
+    for x in range(0, 7):
+        for y in range(0, 3):
+            if gp.led_on((x + y * 8)):
+                trellis.pixels[(x, y)] = (255, 0, 0)
+            else:
+                trellis.pixels[(x, y)] = (0, 0, 0)
     time.sleep(0.001)
