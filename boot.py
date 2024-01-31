@@ -24,9 +24,7 @@ GAMEPAD_REPORT_DESCRIPTOR = bytes((
     0x75, 0x08,  #   Report Size (8)
     0x95, 0x04,  #   Report Count (4)
     0x81, 0x02,  #   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
-    0x85, 0x02,  #   Report ID (2)
     0x05, 0x08,  #   Usage Page (LEDs)
-    0x09, 0x01,  #   Usage (LED)
     0x19, 0x01,  #   Usage Minimum (1)
     0x29, 0x20,  #   Usage Maximum (32)
     0x15, 0x00,  #   Logical Minimum (0)
@@ -41,9 +39,9 @@ gamepad = usb_hid.Device(
     report_descriptor=GAMEPAD_REPORT_DESCRIPTOR,
     usage_page=0x01,           # Generic Desktop Control
     usage=0x05,                # Gamepad
-    report_ids=(1,2,),         # Descriptor uses report ID 1, 2.
-    in_report_lengths=(8,0,),    # This gamepad sends 8 bytes in its report.
-    out_report_lengths=(0,4,),   # It receives 4 bytes of output.
+    report_ids=(1,),         # Descriptor uses report ID 1, 2.
+    in_report_lengths=(8,),    # This gamepad sends 8 bytes in its report.
+    out_report_lengths=(4,),   # It receives 4 bytes of output.
 )
 
 usb_hid.enable(

@@ -145,7 +145,7 @@ class Gamepad:
         )
 
         if always or self._last_report != self._report:
-            self._gamepad_device.send_report(self._report, 1)
+            self._gamepad_device.send_report(self._report)
             # Remember what we sent, without allocating new storage.
             self._last_report[:] = self._report
 
@@ -165,7 +165,7 @@ class Gamepad:
     def led_status(self) -> int:
         """Returns the last received report"""
         # get_last_received_report() returns None when nothing was received
-        led_report = self._gamepad_device.get_last_received_report(2)
+        led_report = self._gamepad_device.get_last_received_report()
         if led_report is not None:
             self._led_status = led_report
         return self._led_status
