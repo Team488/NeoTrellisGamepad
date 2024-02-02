@@ -32,9 +32,9 @@ gamepad = usb_hid.Device(
     report_descriptor=GAMEPAD_REPORT_DESCRIPTOR,
     usage_page=0x01,           # Generic Desktop Control
     usage=0x05,                # Gamepad
-    report_ids=(1,),         # Descriptor uses report ID 1, 2.
+    report_ids=(1,),           # Descriptor uses report ID 1.
     in_report_lengths=(8,),    # This gamepad sends 8 bytes in its report.
-    out_report_lengths=(0,),   # It receives 4 bytes of output.
+    out_report_lengths=(0,),   # It receives no output over the HID protocol.
 )
 
 usb_hid.enable(
