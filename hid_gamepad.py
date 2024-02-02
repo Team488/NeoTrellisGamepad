@@ -50,8 +50,7 @@ class Gamepad:
         # Remember the last report as well, so we can avoid sending
         # duplicate reports.
         self._last_report = bytearray(8)
-        self._led_status = bytes(4)
-
+        
         # Store settings separately before putting into report. Saves code
         # especially for buttons.
         self._buttons_state = 0
@@ -126,7 +125,6 @@ class Gamepad:
         self._joy_y = 0
         self._joy_z = 0
         self._joy_r_z = 0
-        self._led_status = bytes(4)
         self._send(always=True)
 
     def _send(self, always=False):
@@ -160,19 +158,3 @@ class Gamepad:
         if not -127 <= value <= 127:
             raise ValueError("Joystick value must be in range -127 to 127")
         return value
-
-    @property
-    def led_status(self) -> int:
-        """Returns the last received report"""
-        # get_last_received_report() returns None when nothing was received
-        led_report = self._gamepad_device.get_last_received_report()
-        if led_report is not None:
-            self._led_status = led_report
-        return self._led_status
-
-    def led_on(self, led_index: int) -> bool:
-        """Returns whether an LED is on based on the led code
-        """
-        byte = int(led_index // 8)
-        bit = int(led_index % 8)
-        return bool(self._led_status[byte] & 1 << bit)

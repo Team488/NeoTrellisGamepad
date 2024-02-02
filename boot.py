@@ -1,4 +1,5 @@
 import usb_hid
+import usb_cdc
 
 # This is an updated gamepad report descriptor that supports 32 buttons.
 GAMEPAD_REPORT_DESCRIPTOR = bytes((
@@ -24,14 +25,6 @@ GAMEPAD_REPORT_DESCRIPTOR = bytes((
     0x75, 0x08,  #   Report Size (8)
     0x95, 0x04,  #   Report Count (4)
     0x81, 0x02,  #   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
-    0x05, 0x08,  #   Usage Page (LEDs)
-    0x19, 0x01,  #   Usage Minimum (1)
-    0x29, 0x20,  #   Usage Maximum (32)
-    0x15, 0x00,  #   Logical Minimum (0)
-    0x25, 0x01,  #   Logical Maximum (1)
-    0x75, 0x01,  #   Report Size (1)
-    0x95, 0x20,  #   Report Count (32)
-    0x91, 0x02,  #   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
     0xC0,        # End Collection
 ))
 
@@ -41,9 +34,11 @@ gamepad = usb_hid.Device(
     usage=0x05,                # Gamepad
     report_ids=(1,),         # Descriptor uses report ID 1, 2.
     in_report_lengths=(8,),    # This gamepad sends 8 bytes in its report.
-    out_report_lengths=(4,),   # It receives 4 bytes of output.
+    out_report_lengths=(0,),   # It receives 4 bytes of output.
 )
 
 usb_hid.enable(
     (gamepad,)
 )
+
+usb_cdc.enable(console=True,data=True)
