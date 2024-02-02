@@ -22,7 +22,7 @@ else:
 def clearLeds(trellis):
     trellis.pixels.fill(0)
 
-def inRange(value, min, max):
+def inRangeInclusive(value, min, max):
     return value >= min and value <= max
 
 while True:
@@ -66,16 +66,16 @@ while True:
             redValue = int(commandString[2:5])
             greenValue = int(commandString[5:8])
             blueValue = int(commandString[8:11])
-            if not inRange(ledNumber, 1, 32):
+            if not inRangeInclusive(ledNumber, 1, 32):
                 print("Unexpected led number:", ledNumber)
                 continue
-            if not inRange(redValue, 0, 255):
+            if not inRangeInclusive(redValue, 0, 255):
                 print("Unexpected red value:", redValue)
                 continue
-            if not inRange(greenValue, 0, 255):
+            if not inRangeInclusive(greenValue, 0, 255):
                 print("Unexpected green value:", greenValue)
                 continue
-            if not inRange(blueValue, 0, 255):
+            if not inRangeInclusive(blueValue, 0, 255):
                 print("Unexpected blue value:", blueValue)
                 continue
             
