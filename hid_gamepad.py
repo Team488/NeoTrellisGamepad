@@ -50,7 +50,7 @@ class Gamepad:
         # Remember the last report as well, so we can avoid sending
         # duplicate reports.
         self._last_report = bytearray(8)
-
+        
         # Store settings separately before putting into report. Saves code
         # especially for buttons.
         self._buttons_state = 0

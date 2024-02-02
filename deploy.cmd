@@ -1,6 +1,4 @@
-for /f %%D in ('wmic volume get DriveLetter^, Label ^| find "CIRCUITPY"') do set myDrive=%%D
-echo %myDrive%
-
+set myDrive=D:
 REM delete any existing python files so we know it's only going to run our new ones
 del %myDrive%\*.py
 REM copy over our python files
