@@ -10,7 +10,6 @@ import usb_hid
 trellis = adafruit_trellism4.TrellisM4Express()
 
 gp = Gamepad(usb_hid.devices)
-gp.press_buttons(2)
 
 # Change the overall brightness of the NeoTrellis
 trellis.pixels.brightness = 0.1
@@ -56,30 +55,67 @@ pressed_buttons_set = set()
 # Initialize the last_pressed_buttons list
 last_pressed_buttons = []
 
+toggled_active_buttons = set()
+
+special_toggle_buttons = set([2, 3, 4, 5, 6, 10, 11, 12, 25, 26, 27])
+
+# general pattern:
+# Check for any pressed buttons.
+
+#   If there are any pressed buttons, see if they are members of the special set of toggle buttons (2-6, 10-12, 25-27).
+#   If they are, see if they were pressed last loop. If so, take no action. But if they are new:
+#        If they are not in the set of toggled_active_buttons, add them.
+#        If they are in the set of toggled_active_buttons, remove them.
+#   Then, for each button in the set of toggled_active_buttons, press the button on the gamepad.
+
+#   If they are not members of the special set of toggle buttons, then:
+#        Press the matching button on the gamepad
+#        Set that button to red color
+
+#    If there are any buttons that were pressed last loop but are not pressed this loop, release them on the gamepad and set their color back to the default color.
+
 while True:
     pressed = trellis.pressed_keys
     if pressed:
         pressed_buttons = [(x + y * 8) + 1 for x, y in pressed]
-        for x, y in pressed:
-            trellis.pixels[x, y] = (255, 0, 0)  # Set pressed buttons to red
+        #for x, y in pressed:
+        #    trellis.pixels[x, y] = (255, 0, 0)  # Set pressed buttons to red
         print("Pressed buttons:", pressed_buttons)
-        gp.press_buttons(*pressed_buttons)
-
+        
+        for currentButton in pressed_buttons:
+            if currentButton in special_toggle_buttons:
+                if currentButton not in last_pressed_buttons: #checking for special button and debouncing
+                    if currentButton in toggled_active_buttons:
+                        toggled_active_buttons.remove(currentButton)
+                        gp.release_buttons(currentButton)
+                        setButtonColor(currentButton, getDefaultButtonColor(currentButton))
+                    else:
+                        toggled_active_buttons.add(currentButton)
+                        gp.press_buttons(currentButton)
+                        setButtonColor(currentButton, (255, 0, 0))
+            else:
+                # this is a boring regular button
+                setButtonColor(currentButton, (255, 0, 0))
+                gp.press_buttons(currentButton)
+        print("Toggled active buttons:", toggled_active_buttons)
+        # Keep track of what buttons are pressed for the next cycle
+        pressed_buttons_set.clear()
         pressed_buttons_set.update(pressed_buttons)
 
+        # Release any regular buttons that were pressed last loop but are not pressed this loop
         for button in last_pressed_buttons:
-            if button not in pressed_buttons:
+            if button not in pressed_buttons and button not in special_toggle_buttons:
                 setButtonColor(button, getDefaultButtonColor(button))
-                if button in pressed_buttons_set:
-                    gp.release_buttons(button)
-                    pressed_buttons_set.discard(button)
+                gp.release_buttons(button)
         last_pressed_buttons = pressed_buttons        
     else:
-        gp.release_all_buttons()
+        #gp.release_all_buttons()
         pressed_buttons_set.clear()
 
         for button in last_pressed_buttons:
-            setButtonColor(button, getDefaultButtonColor(button))
+            if button not in special_toggle_buttons:
+                gp.release_buttons(button)
+                setButtonColor(button, getDefaultButtonColor(button))
         
         last_pressed_buttons = []
         
