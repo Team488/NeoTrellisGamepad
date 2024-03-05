@@ -6,6 +6,7 @@ import struct
 from adafruit_hid import find_device
 from hid_gamepad import Gamepad
 import usb_hid
+from builtins import set
 
 trellis = adafruit_trellism4.TrellisM4Express()
 
@@ -14,23 +15,28 @@ gp = Gamepad(usb_hid.devices)
 # Change the overall brightness of the NeoTrellis
 trellis.pixels.brightness = 0.1
 
+meleeScoring = set([26,27,28])
+rangedScoring = set([17,18,19,20])
+spikeNotes = set([10,11,12])
+midlineNotes = set([2,3,4,5,6])
+reservedButtons = set([1,9,25])
+
+# autoButtons are the set of buttons (out of 32 possible) not in any of the above sets.
+autoButtons = set(range(1,33)) - (meleeScoring | rangedScoring | spikeNotes | midlineNotes | reservedButtons)
+
 def getDefaultButtonColor(button):
     # buttons 2,3,4,5,6 are orange, representing midline notes
     # buttons 10, 11, 12 are orange, representing spike notes.
-    # button 14 is a bright purple, representing the Source.
-    # buttons 17, 18, and 19 are dim white, representing ranged shots.
+    # buttons 18, 19, and 20 are dim white, representing ranged shots.
     # buttons 25, 26, 27 are bright green, representing melee shots.
-    # button 9 is bright blue, representing the Amp.
 
-    if button in [2, 3, 4, 5, 6, 10, 11, 12]:
+    if button in spikeNotes or button in midlineNotes:
         return (255, 128, 0)
-    elif button in [17, 18, 19]:
+    elif button in rangedScoring:
         return (128, 128, 128)
-    elif button in [25, 26, 27]:
+    elif button in meleeScoring:
         return (0, 255, 0)
-    elif button == 14:
-        return (128, 0, 128)
-    elif button == 9:
+    elif button in autoButtons:
         return (0, 0, 255)
     else:
         return (0, 0, 0)
@@ -57,7 +63,11 @@ last_pressed_buttons = []
 
 toggled_active_buttons = set()
 
-special_toggle_buttons = set([2, 3, 4, 5, 6, 10, 11, 12, 25, 26, 27])
+special_toggle_buttons = set()
+special_toggle_buttons.update(spikeNotes)
+special_toggle_buttons.update(midlineNotes)
+special_toggle_buttons.update(meleeScoring)
+special_toggle_buttons.update(rangedScoring)
 
 # general pattern:
 # Check for any pressed buttons.
