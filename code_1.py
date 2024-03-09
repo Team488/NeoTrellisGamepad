@@ -20,9 +20,11 @@ rangedScoring = set([17,18,19,20])
 spikeNotes = set([10,11,12])
 midlineNotes = set([2,3,4,5,6])
 reservedButtons = set([1,9,25])
+breadAndButter = set([23])
+oracleAuto = set([31])
 
 # autoButtons are the set of buttons (out of 32 possible) not in any of the above sets.
-autoButtons = set(range(1,33)) - (meleeScoring | rangedScoring | spikeNotes | midlineNotes | reservedButtons)
+autoButtons = set(range(1,33)) - (meleeScoring | rangedScoring | spikeNotes | midlineNotes | reservedButtons | breadAndButter | oracleAuto)
 
 def getDefaultButtonColor(button):
     # buttons 2,3,4,5,6 are orange, representing midline notes
@@ -38,6 +40,10 @@ def getDefaultButtonColor(button):
         return (0, 255, 0)
     elif button in autoButtons:
         return (0, 0, 255)
+    elif button in breadAndButter:
+        return (128,0,128)
+    elif button in oracleAuto:
+        return (128, 0, 0)
     else:
         return (0, 0, 0)
 
