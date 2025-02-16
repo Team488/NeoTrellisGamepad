@@ -1,0 +1,139 @@
+# Write your code here :-)
+# requires the adafruit_hid, adafruit_neotrellis, adafruit_matrixkeypad.mpy, adafruit_tellism4.mpy, and neopixel.mpy libraries.
+
+import time
+import adafruit_trellism4
+import struct
+from adafruit_hid import find_device
+from hid_gamepad import Gamepad
+import usb_hid
+from builtins import set
+
+diamondblue=(64,100,250)
+honeyyellow=(150,75,0)
+pink=(254,8,168)
+grassgreen=(73,176,0)
+lightyellow=(255,229,6)
+lightpink=(197,103,94)
+
+trellis = adafruit_trellism4.TrellisM4Express()
+
+gp = Gamepad(usb_hid.devices)
+
+
+# Change the overall brightness of the NeoTrellis
+trellis.pixels.brightness = 1.0
+
+def setButtonColor(button1, button2=None, color):
+    x = (button - 1) % 8
+    y = (button - 1) // 8
+    trellis.pixels[x, y] = color
+    
+def setBrightness(button,brightness):
+    trellis.pixels.brightness=brightness
+    
+buttonsbright=set()
+buttonspressedlastloop=set()
+
+print ("program starting")
+
+# Set button 1 to (R, G, B) color 0, 0, 128
+# setButtonColor(1, (0, 0, 128))
+
+# pressed_buttons returns the set of pressed buttons
+# buttons are numbered from 1 to 32
+#
+# |———————————————————————————————|
+# | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+# |———————————————————————————————|
+# | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+# |———————————————————————————————|
+# | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 |
+# |———————————————————————————————|
+# | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 |
+# |———————————————————————————————|
+
+# 1, 10, 19, 28, 21, 14, 7, 16, 23,30, 21, 12, 3, 10, 17, 26, 19, 12, 5, 14, 23, 32
+
+
+
+while True:
+    pressed = trellis.pressed_keys
+    if pressed:
+        # Determines location of button
+        xLoc = pressed[0][0]
+        yLoc = pressed[0][1]
+        apples = xLoc + 8*yLoc + 1
+        for pressedbutton in pressed: 
+            if pressedbutton in buttonsbright and pressedbutton not in buttonspressedlastloop:
+                buttonsbright.remove(pressedbutton)
+            elif pressedbutton not in pressed and buttonsbright not in buttonspressedlastloop:
+                buttonsbright.add(pressedbutton)
+else:
+    buttonspressedlastloop=set()
+
+    setButtonColor(27,28,(diamondblue))
+    setButtonColor(29, 22,(honeyyellow))
+    setButtonColor(14,5,(pink))
+    setButtonColor(4,3,(grassgreen))
+    setButtonColor(2,9,(lightyellow))
+    setButtonColor(17,26,(lightpink))
+    
+    
+    setButtonColor(24,(255,222,0)) #levelcolors
+    setButtonColor(32,(0,255,0))
+    setButtonColor(8,(250,0,0))
+    setButtonColor(16,(255,25,0))
+ 
+ 
+
+    buttoncolors={
+        1: (0,0,0),
+        2: (250,0,0),
+        3: (228, 184, 76),
+        4:(249, 255, 58),
+        5:(130, 255, 58),
+        6:(58, 255, 219),
+        7:(58, 94, 255),
+        8: (199, 58, 255),
+        9: (0,0,0),
+        10: (250,0,0),
+        11: (228, 184, 76),
+        12:(249, 255, 58),
+        13:(130, 255, 58),
+        14:(58, 255, 219),
+        15:(58, 94, 255),
+        16: (199, 58, 255),
+        17: (0,0,0),
+        18: (250,0,0),
+        19: (228, 184, 76),
+        20:(249, 255, 58),
+        21:(130, 255, 58),
+        22:(58, 255, 219),
+        23:(58, 94, 255),
+        24: (199, 58, 255),
+        25: (0,0,0),
+        26: (250,0,0),
+        27: (228, 184, 76),
+        28:(249, 255, 58),
+        29:(130, 255, 58),
+        30:(58, 255, 219),
+        31:(58, 94, 255),
+        32: (199, 58, 255)
+    }
+    colorpattern={
+        1: (0,0,0),
+        2: (250,0,0),
+        3: (228, 184, 76),
+        4:(249, 255, 58),
+        5:(130, 255, 58),
+        6:(58, 255, 219),
+        7:(58, 94, 255),
+        8: (199, 58, 255)}
+
+# Render loop
+    for buttonindex in range(1,36):
+        setBrightness(buttonindex,0.5)
+        if button in buttonsbright:
+            setBrightness(pressedbutton,5)
+
