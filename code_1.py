@@ -2,140 +2,75 @@
 
 import time
 import adafruit_trellism4
-import struct
-from adafruit_hid import find_device
 from hid_gamepad import Gamepad
 import usb_hid
-from builtins import set
 
-trellis = adafruit_trellism4.TrellisM4Express()
+# Initialize Trellis and Gamepad
+neo_trellis = adafruit_trellism4.TrellisM4Express()
+gamepad = Gamepad(usb_hid.devices)
 
-gp = Gamepad(usb_hid.devices)
+# Set brightness
+neo_trellis.pixels.brightness = 0.1
 
-# Change the overall brightness of the NeoTrellis
-trellis.pixels.brightness = 0.1
+# Button mappings
+button_mappings = {
+    1: (0, 0), 2: (1, 0), 3: (2, 0), 4: (3, 0), 5: (4, 0), 6: (5, 0), 7: (6, 0), 8: (7, 0),
+    9: (0, 1), 10: (1, 1), 11: (2, 1), 12: (3, 1), 13: (4, 1), 14: (5, 1), 15: (6, 1), 16: (7, 1),
+    17: (0, 2), 18: (1, 2), 19: (2, 2), 20: (3, 2), 21: (4, 2), 22: (5, 2), 23: (6, 2), 24: (7, 2),
+    25: (0, 3), 26: (1, 3), 27: (2, 3), 28: (3, 3), 29: (4, 3), 30: (5, 3), 31: (6, 3), 32: (7, 3)
+}
 
-meleeScoring = set([26,27,28])
-rangedScoring = set([17,18,19,20])
-spikeNotes = set([10,11,12])
-midlineNotes = set([2,3,4,5,6])
-reservedButtons = set([1,9,25])
-breadAndButter = set([23])
-oracleAuto = set([31])
-breadAndButterExtended = set([16])
+# Default colors
+location_buttons = {2, 3, 4, 5, 9, 14, 17, 22, 26, 27, 28, 29}
+level_buttons = {8, 16, 24, 32}
+special_buttons = {11, 19, 20}
 
-# autoButtons are the set of buttons (out of 32 possible) not in any of the above sets.
-autoButtons = set(range(1,33)) - (meleeScoring | rangedScoring | spikeNotes | midlineNotes | reservedButtons | breadAndButter | oracleAuto | breadAndButterExtended)
+# Assign colors to ReefFace buttons
+reef_face_colors = {
+    (27, 28): (0, 255, 0),  # Green
+    (29, 22): (0, 0, 255),  # Blue
+    (14, 5): (255, 0, 0),   # Red
+    (4, 3): (255, 255, 0),  # Yellow
+    (2, 9): (255, 0, 255),  # Magenta
+    (17, 26): (0, 255, 255) # Cyan
+}
 
-def getDefaultButtonColor(button):
-    # buttons 2,3,4,5,6 are orange, representing midline notes
-    # buttons 10, 11, 12 are orange, representing spike notes.
-    # buttons 18, 19, and 20 are dim white, representing ranged shots.
-    # buttons 25, 26, 27 are bright green, representing melee shots.
-
-    if button in spikeNotes or button in midlineNotes:
-        return (255, 128, 0)
-    elif button in rangedScoring:
-        return (128, 128, 128)
-    elif button in meleeScoring:
-        return (0, 255, 0)
-    elif button in autoButtons:
-        return (0, 0, 255)
-    elif button in breadAndButter:
-        return (128,0,128)
-    elif button in oracleAuto:
-        return (128, 0, 0)
-    elif button in breadAndButterExtended:
-        return (255,255,255)
+# Set default colors
+button_colors = {}
+for button, (x, y) in button_mappings.items():
+    if button in location_buttons or button in level_buttons:
+        color = (0, 0, 255)  # Blue
+    elif button in special_buttons:
+        color = (255, 255, 255)  # White
     else:
-        return (0, 0, 0)
+        color = (0, 0, 0)  # No color
+    neo_trellis.pixels[x, y] = color
+    button_colors[button] = color
 
-def setButtonColor(button, color):
-    x = (button - 1) % 8
-    y = (button - 1) // 8
-    trellis.pixels[x, y] = color
+# Override colors for ReefFace buttons
+for buttons, color in reef_face_colors.items():
+    for button in buttons:
+        x, y = button_mappings[button]
+        neo_trellis.pixels[x, y] = color
+        button_colors[button] = color
 
-def setAllButtonsBackToDefault():
-    for i in range(1, 33):
-        setButtonColor(i, getDefaultButtonColor(i))
-
-# Initially loop through all 32 buttons and set their colors to the default colors.
-setAllButtonsBackToDefault()
-
-# Now, respond dynamically to button presses.
-
-# Initialize a set to keep track of the pressed buttons
-pressed_buttons_set = set()
-
-# Initialize the last_pressed_buttons list
-last_pressed_buttons = []
-
-toggled_active_buttons = set()
-
-special_toggle_buttons = set()
-special_toggle_buttons.update(spikeNotes)
-special_toggle_buttons.update(midlineNotes)
-special_toggle_buttons.update(meleeScoring)
-special_toggle_buttons.update(rangedScoring)
-
-# general pattern:
-# Check for any pressed buttons.
-
-#   If there are any pressed buttons, see if they are members of the special set of toggle buttons (2-6, 10-12, 25-27).
-#   If they are, see if they were pressed last loop. If so, take no action. But if they are new:
-#        If they are not in the set of toggled_active_buttons, add them.
-#        If they are in the set of toggled_active_buttons, remove them.
-#   Then, for each button in the set of toggled_active_buttons, press the button on the gamepad.
-
-#   If they are not members of the special set of toggle buttons, then:
-#        Press the matching button on the gamepad
-#        Set that button to red color
-
-#    If there are any buttons that were pressed last loop but are not pressed this loop, release them on the gamepad and set their color back to the default color.
+# Track pressed buttons
+pressed_buttons = set()
 
 while True:
-    pressed = trellis.pressed_keys
-    if pressed:
-        pressed_buttons = [(x + y * 8) + 1 for x, y in pressed]
-        #for x, y in pressed:
-        #    trellis.pixels[x, y] = (255, 0, 0)  # Set pressed buttons to red
-        print("Pressed buttons:", pressed_buttons)
-        
-        for currentButton in pressed_buttons:
-            if currentButton in special_toggle_buttons:
-                if currentButton not in last_pressed_buttons: #checking for special button and debouncing
-                    if currentButton in toggled_active_buttons:
-                        toggled_active_buttons.remove(currentButton)
-                        gp.release_buttons(currentButton)
-                        setButtonColor(currentButton, getDefaultButtonColor(currentButton))
-                    else:
-                        toggled_active_buttons.add(currentButton)
-                        gp.press_buttons(currentButton)
-                        setButtonColor(currentButton, (255, 0, 0))
-            else:
-                # this is a boring regular button
-                setButtonColor(currentButton, (255, 0, 0))
-                gp.press_buttons(currentButton)
-        print("Toggled active buttons:", toggled_active_buttons)
-        # Keep track of what buttons are pressed for the next cycle
-        pressed_buttons_set.clear()
-        pressed_buttons_set.update(pressed_buttons)
+    current_pressed = set((x + y * 8 + 1) for x, y in neo_trellis.pressed_keys)
 
-        # Release any regular buttons that were pressed last loop but are not pressed this loop
-        for button in last_pressed_buttons:
-            if button not in pressed_buttons and button not in special_toggle_buttons:
-                setButtonColor(button, getDefaultButtonColor(button))
-                gp.release_buttons(button)
-        last_pressed_buttons = pressed_buttons        
-    else:
-        #gp.release_all_buttons()
-        pressed_buttons_set.clear()
+    # Handle newly pressed buttons
+    for button in current_pressed - pressed_buttons:
+        x, y = button_mappings[button]
+        neo_trellis.pixels[x, y] = (255, 255, 255)  # Bright white
+        gamepad.press_buttons(button)
 
-        for button in last_pressed_buttons:
-            if button not in special_toggle_buttons:
-                gp.release_buttons(button)
-                setButtonColor(button, getDefaultButtonColor(button))
-        
-        last_pressed_buttons = []
-        
-    time.sleep(0.001)
+    # Handle released buttons
+    for button in pressed_buttons - current_pressed:
+        x, y = button_mappings[button]
+        neo_trellis.pixels[x, y] = button_colors[button]  # Return to original color
+        gamepad.release_buttons(button)
+
+    pressed_buttons = current_pressed
+    time.sleep(0.01)
